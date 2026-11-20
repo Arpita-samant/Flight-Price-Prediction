@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
-  Plane, Sparkles, ArrowRight, ShieldCheck, TrendingUp, Clock, 
-  Cpu, AlertCircle, ArrowUpRight, 
+  Plane, Sparkles, ArrowRight,
+  Cpu, ArrowUpRight, 
   SlidersHorizontal, BarChart4, ChevronRight
 } from 'lucide-react';
 import { POPULAR_ROUTES } from '../data/flightConstants';
@@ -124,80 +124,7 @@ export default function LandingPage({ onStartPredicting, onSelectRoute }) {
         </div>
       </section>
 
-      {/* 2. PROBLEM STATEMENT & OBJECTIVES (PRD SECTION 2 & 3) */}
-      <section className="py-20 bg-slate-900/40 border-y border-slate-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-blue-400 mb-3">
-              The Problem We Solve
-            </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Why Are Flight Ticket Prices So Frustrating?
-            </h3>
-            <p className="mt-4 text-slate-400 text-base sm:text-lg">
-              Airlines use complex dynamic pricing algorithms. Travelers face unpredictability, steep surge pricing, and hours of manual comparison.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Problem 1 */}
-            <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 hover:border-slate-700 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-6">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-2">Frequent Price Swings</h4>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Fares change daily and even hourly based on seat inventory, day of week, and booking time windows, catching travelers off guard.
-              </p>
-            </div>
-
-            {/* Problem 2 */}
-            <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 hover:border-slate-700 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-2">Unclear "Fair" Pricing</h4>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Without market benchmarks, users have no way to know whether a displayed ₹6,000 or ₹12,000 ticket is actually reasonable or overpriced.
-              </p>
-            </div>
-
-            {/* Problem 3 */}
-            <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 hover:border-slate-700 transition-all">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-6">
-                <Clock className="w-6 h-6" />
-              </div>
-              <h4 className="text-xl font-bold text-white mb-2">Tedious Manual Searching</h4>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Checking multiple flight aggregator websites across different dates and times wastes valuable time and still leads to uncertainty.
-              </p>
-            </div>
-          </div>
-
-          {/* Solution Highlight Banner */}
-          <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-blue-900/30 via-indigo-900/20 to-slate-900 border border-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-500/20 text-blue-400 rounded-xl">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-white">Our ML Solution: Instant Price Certainty</h4>
-                <p className="text-sm text-slate-300">
-                  By training on real flight historical data with 9 core features, our system predicts accurate baseline ticket estimates.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onStartPredicting}
-              className="whitespace-nowrap px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all cursor-pointer shadow-lg shadow-blue-600/30"
-            >
-              Test Prediction Now →
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. HOW IT WORKS (PRD SECTION 8 & 10) */}
+      {/* 2. HOW IT WORKS (PRD SECTION 8 & 10) */}
       <section id="how-it-works" className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">

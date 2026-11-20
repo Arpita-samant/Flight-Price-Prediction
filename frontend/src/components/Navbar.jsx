@@ -29,17 +29,52 @@ export default function Navbar({ currentPage, onNavigate }) {
           </div>
         </div>
 
-        {/* Center Nav Links for Landing Page */}
-        {currentPage === 'landing' && (
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-            <a href="#how-it-works" className="hover:text-blue-400 transition-colors">
-              How It Works
-            </a>
-            <a href="#popular-routes" className="hover:text-blue-400 transition-colors">
-              Popular Routes
-            </a>
-          </div>
-        )}
+        {/* Center Nav Links */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+          <button
+            onClick={() => {
+              onNavigate('landing');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`transition-colors cursor-pointer ${
+              currentPage === 'landing' 
+                ? 'text-blue-400 font-semibold' 
+                : 'text-slate-300 hover:text-blue-400'
+            }`}
+          >
+            Home
+          </button>
+          <a 
+            href="#how-it-works" 
+            onClick={(e) => {
+              if (currentPage !== 'landing') {
+                e.preventDefault();
+                onNavigate('landing');
+                setTimeout(() => {
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }
+            }}
+            className="hover:text-blue-400 transition-colors"
+          >
+            How It Works
+          </a>
+          <a 
+            href="#popular-routes" 
+            onClick={(e) => {
+              if (currentPage !== 'landing') {
+                e.preventDefault();
+                onNavigate('landing');
+                setTimeout(() => {
+                  document.getElementById('popular-routes')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }
+            }}
+            className="hover:text-blue-400 transition-colors"
+          >
+            Popular Routes
+          </a>
+        </div>
 
         {/* Right CTA Button */}
         <div className="flex items-center gap-3">
