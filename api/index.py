@@ -1,24 +1,68 @@
 import os
+import json
+import numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pandas as pd
-import joblib
 
 app = Flask(__name__)
 CORS(app)
 
-# Load trained ML model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
-if not os.path.exists(MODEL_PATH):
-    MODEL_PATH = os.path.join(BASE_DIR, "..", "backend", "ml", "model.pkl")
+META_PATH = os.path.join(BASE_DIR, "model_meta.json")
+WEIGHTS_PATH = os.path.join(BASE_DIR, "model_weights.npz")
+
+model_loaded = False
+meta = None
+left = None
+right = None
+feature = None
+threshold = None
+val = None
+offsets = None
 
 try:
-    model = joblib.load(MODEL_PATH)
-    print(f"ML Model loaded successfully from {MODEL_PATH}")
+    with open(META_PATH, "r", encoding="utf-8") as f:
+        meta = json.load(f)
+
+    weights = np.load(WEIGHTS_PATH)
+    left = weights["left"]
+    right = weights["right"]
+    feature = weights["feature"]
+    threshold = weights["threshold"]
+    val = weights["val"]
+    offsets = meta["offsets"]
+    model_loaded = True
+    print("Fast Random Forest model loaded successfully into memory.")
 except Exception as e:
-    print(f"Warning: Could not load model from {MODEL_PATH}: {e}")
-    model = None
+    print(f"Warning: Could not load model weights: {e}")
+
+def run_prediction(data):
+    # One-hot encode categorical features matching model training pipeline
+    feats = []
+    for col, cats in zip(meta["cat_cols"], meta["categories"]):
+        val_str = str(data.get(col, ""))
+        for c in cats:
+            feats.append(1.0 if val_str == c else 0.0)
+
+    # Append numerical features (duration, days_left)
+    for col in meta["num_cols"]:
+        feats.append(float(data.get(col, 0.0)))
+
+    x = np.array(feats, dtype=np.float32)
+
+    # Parallel tree traversal across all Random Forest estimators
+    total = 0.0
+    n = len(offsets)
+    for off in offsets:
+        node = off
+        while left[node] != -1:
+            if x[feature[node]] <= threshold[node]:
+                node = off + left[node]
+            else:
+                node = off + right[node]
+        total += val[node]
+
+    return round(float(total / n), 2)
 
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST", "OPTIONS"])
 @app.route("/<path:path>", methods=["GET", "POST", "OPTIONS"])
@@ -28,40 +72,27 @@ def handler(path):
 
     clean_path = path.strip("/")
 
-    # Health check
+    # Health check endpoints
     if clean_path in ["", "api", "api/health", "health"]:
         return jsonify({
             "status": "online",
-            "service": "Flight Price Prediction Vercel API",
-            "model_loaded": model is not None
+            "service": "Flight Price Prediction Vercel ML API",
+            "model_loaded": model_loaded
         })
 
-    # Predict endpoint
+    # Predict endpoints
     if clean_path in ["predict", "api/predict"]:
+        if not model_loaded:
+            return jsonify({"error": "ML model is not loaded."}), 500
+
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({"error": "No JSON payload provided."}), 400
+
         try:
-            if model is None:
-                return jsonify({"error": "ML model is not loaded on server."}), 500
-
-            data = request.get_json(force=True, silent=True)
-            if not data:
-                return jsonify({"error": "No JSON payload provided."}), 400
-
-            input_data = pd.DataFrame([{
-                "airline": data.get("airline"),
-                "source_city": data.get("source_city"),
-                "destination_city": data.get("destination_city"),
-                "departure_time": data.get("departure_time"),
-                "arrival_time": data.get("arrival_time"),
-                "stops": data.get("stops"),
-                "class": data.get("class"),
-                "duration": float(data.get("duration", 2.0)),
-                "days_left": int(data.get("days_left", 15))
-            }])
-
-            prediction = model.predict(input_data)[0]
-
+            predicted_price = run_prediction(data)
             return jsonify({
-                "predicted_price": round(float(prediction), 2),
+                "predicted_price": predicted_price,
                 "status": "success"
             })
         except Exception as e:
