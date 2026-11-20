@@ -20,53 +20,54 @@ except Exception as e:
     print(f"Warning: Could not load model from {MODEL_PATH}: {e}")
     model = None
 
-@app.route("/")
-@app.route("/api")
-@app.route("/api/health")
-def health():
-    return jsonify({
-        "status": "online",
-        "service": "Flight Price Prediction Vercel API",
-        "model_loaded": model is not None
-    })
-
-@app.route("/api/predict", methods=["POST", "OPTIONS"])
-@app.route("/predict", methods=["POST", "OPTIONS"])
-def predict():
+@app.route("/", defaults={"path": ""}, methods=["GET", "POST", "OPTIONS"])
+@app.route("/<path:path>", methods=["GET", "POST", "OPTIONS"])
+def handler(path):
     if request.method == "OPTIONS":
         return "", 204
 
-    try:
-        if model is None:
-            return jsonify({"error": "ML model is not loaded on server."}), 500
+    clean_path = path.strip("/")
 
-        data = request.get_json(force=True, silent=True)
-        if not data:
-            return jsonify({"error": "No JSON payload provided."}), 400
-
-        # Convert input into DataFrame matching model features
-        input_data = pd.DataFrame([{
-            "airline": data.get("airline"),
-            "source_city": data.get("source_city"),
-            "destination_city": data.get("destination_city"),
-            "departure_time": data.get("departure_time"),
-            "arrival_time": data.get("arrival_time"),
-            "stops": data.get("stops"),
-            "class": data.get("class"),
-            "duration": float(data.get("duration", 2.0)),
-            "days_left": int(data.get("days_left", 15))
-        }])
-
-        # Predict flight price
-        prediction = model.predict(input_data)[0]
-
+    # Health check
+    if clean_path in ["", "api", "api/health", "health"]:
         return jsonify({
-            "predicted_price": round(float(prediction), 2),
-            "status": "success"
+            "status": "online",
+            "service": "Flight Price Prediction Vercel API",
+            "model_loaded": model is not None
         })
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    # Predict endpoint
+    if clean_path in ["predict", "api/predict"]:
+        try:
+            if model is None:
+                return jsonify({"error": "ML model is not loaded on server."}), 500
+
+            data = request.get_json(force=True, silent=True)
+            if not data:
+                return jsonify({"error": "No JSON payload provided."}), 400
+
+            input_data = pd.DataFrame([{
+                "airline": data.get("airline"),
+                "source_city": data.get("source_city"),
+                "destination_city": data.get("destination_city"),
+                "departure_time": data.get("departure_time"),
+                "arrival_time": data.get("arrival_time"),
+                "stops": data.get("stops"),
+                "class": data.get("class"),
+                "duration": float(data.get("duration", 2.0)),
+                "days_left": int(data.get("days_left", 15))
+            }])
+
+            prediction = model.predict(input_data)[0]
+
+            return jsonify({
+                "predicted_price": round(float(prediction), 2),
+                "status": "success"
+            })
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+
+    return jsonify({"error": f"Endpoint '{clean_path}' not found."}), 404
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
