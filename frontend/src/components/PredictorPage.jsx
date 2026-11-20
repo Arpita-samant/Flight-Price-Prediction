@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Plane, Calendar, Clock, ArrowRight, ArrowLeftRight, Sparkles, 
-  RefreshCw, History, CheckCircle2, ChevronLeft, 
-  Trash2, Download, AlertTriangle, Tag, Info
+  RefreshCw, History, ChevronLeft, 
+  Trash2, Download, AlertTriangle, Info
 } from 'lucide-react';
 import { 
   AIRLINES, CITIES, TIME_SLOTS, ARRIVAL_TIME_SLOTS, 
@@ -179,37 +179,6 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
     setError(null);
   };
 
-  // Load sample flight
-  const handleLoadSample = (sampleType) => {
-    if (sampleType === 'business') {
-      setFormData({
-        airline: 'Vistara',
-        source_city: 'Delhi',
-        destination_city: 'Bangalore',
-        departure_time: 'Morning',
-        arrival_time: 'Afternoon',
-        stops: 'zero',
-        class: 'Business',
-        duration: 2.75,
-        travel_date: getDefaultDate(),
-        days_left: 21
-      });
-    } else {
-      setFormData({
-        airline: 'Indigo',
-        source_city: 'Delhi',
-        destination_city: 'Mumbai',
-        departure_time: 'Morning',
-        arrival_time: 'Afternoon',
-        stops: 'zero',
-        class: 'Economy',
-        duration: 2.15,
-        travel_date: getDefaultDate(),
-        days_left: 14
-      });
-    }
-  };
-
   // Clear history
   const handleClearHistory = () => {
     if (window.confirm('Are you sure you want to clear your prediction history?')) {
@@ -265,21 +234,6 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
               </span>
             </h1>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleLoadSample('economy')}
-              className="text-xs px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors cursor-pointer"
-            >
-              Load Sample: DEL ➔ BOM
-            </button>
-            <button
-              onClick={() => handleLoadSample('business')}
-              className="text-xs px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors cursor-pointer"
-            >
-              Load Sample: Business Class
-            </button>
-          </div>
         </div>
 
         {/* Error notification */}
@@ -290,10 +244,10 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className={`grid grid-cols-1 ${predictionResult ? 'lg:grid-cols-12 gap-8' : 'max-w-3xl mx-auto'} items-start`}>
           
-          {/* ================= LEFT / INPUT FORM (7 cols) ================= */}
-          <div className="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+          {/* ================= LEFT / INPUT FORM ================= */}
+          <div className={`${predictionResult ? 'lg:col-span-7' : 'w-full'} bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl backdrop-blur-xl`}>
             
             <div className="flex items-center justify-between pb-5 border-b border-slate-800 mb-6">
               <div>
@@ -578,33 +532,29 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
 
           </div>
 
-          {/* ================= RIGHT / PREDICTION RESULTS (5 cols) ================= */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* MAIN PREDICTION RESULT CARD */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+          {/* ================= RIGHT / PREDICTION RESULTS ================= */}
+          {predictionResult && (
+            <div className="lg:col-span-5 space-y-6">
               
-              {/* Decorative accent top line */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400" />
-
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-blue-400" />
-                  <span>ML Fare Result</span>
-                </span>
+              {/* MAIN PREDICTION RESULT CARD */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-xl">
                 
-                {predictionResult && (
+                {/* Decorative accent top line */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400" />
+
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-semibold text-slate-400">
+                    Predicted Ticket Price
+                  </span>
+                  
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${getPriceTier(predictionResult.predictedPrice, predictionResult.class).color}`}>
                     {getPriceTier(predictionResult.predictedPrice, predictionResult.class).label}
                   </span>
-                )}
-              </div>
+                </div>
 
-              {predictionResult ? (
                 <div>
                   {/* Price display */}
                   <div className="my-3">
-                    <div className="text-xs text-slate-400 mb-1">Estimated Ticket Price</div>
                     <div className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-200 to-sky-300">
                       ₹ {predictionResult.predictedPrice.toLocaleString('en-IN')}
                     </div>
@@ -669,43 +619,11 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
                   </div>
 
                 </div>
-              ) : (
-                /* Initial Empty State */
-                <div className="py-12 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mx-auto mb-4">
-                    <Plane className="w-8 h-8 -rotate-45" />
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-1">Awaiting Flight Parameters</h3>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto mb-6">
-                    Enter your departure details on the left and click "Predict Flight Price Now" to calculate estimated ticket price.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handlePredict}
-                    className="px-4 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-xs font-semibold cursor-pointer transition-all"
-                  >
-                    Quick Predict Default Flight (DEL ➔ BOM)
-                  </button>
-                </div>
-              )}
+
+              </div>
 
             </div>
-
-            {/* QUICK STATS & PRD REQUIREMENTS SUMMARY */}
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 text-xs text-slate-400 space-y-3">
-              <div className="flex items-center gap-2 text-white font-bold pb-2 border-b border-slate-800">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>PRD Specification Verification</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div>• ML Model: Random Forest</div>
-                <div>• Dataset: Kaggle Cleaned</div>
-                <div>• History: Local & MySQL Ready</div>
-                <div>• Backend: Python (Flask)</div>
-              </div>
-            </div>
-
-          </div>
+          )}
 
         </div>
 

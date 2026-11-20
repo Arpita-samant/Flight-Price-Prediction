@@ -22,15 +22,6 @@ export default function LandingPage({ onStartPredicting, onSelectRoute }) {
             
             {/* Left Column: Headlines & CTA */}
             <div className="lg:col-span-7 text-center lg:text-left">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-medium mb-6 shadow-sm">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 -ml-4" />
-                <span className="text-blue-300 font-semibold">Trained ML Model</span>
-                <span className="text-slate-500">•</span>
-                <span>Random Forest Regression</span>
-              </div>
-
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
                 Predict Flight Ticket Prices{' '}
@@ -377,15 +368,12 @@ export default function LandingPage({ onStartPredicting, onSelectRoute }) {
         </div>
       </section>
 
-      {/* 8. FOOTER */}
+      {/* FOOTER */}
       <footer className="py-12 border-t border-slate-900 bg-slate-950 text-slate-500 text-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Plane className="w-5 h-5 text-blue-500 -rotate-45" />
             <span className="font-bold text-slate-300">Flight Price Prediction System</span>
-          </div>
-          <div>
-            Built with React.js, Tailwind CSS, Python, Random Forest ML & MySQL.
           </div>
           <div>
             © 2026 Flight Price Prediction System. All rights reserved.
