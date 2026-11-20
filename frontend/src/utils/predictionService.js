@@ -1,4 +1,5 @@
-const BACKEND_URL = 'http://localhost:5000/api/predict';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '');
+const BACKEND_URL = `${API_BASE}/api/predict`;
 const STORAGE_KEY = 'flight_prediction_history';
 
 /**

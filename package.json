@@ -1,0 +1,9 @@
+{
+  "name": "flight-price-prediction-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "vercel-build": "npm --prefix frontend install && npm --prefix frontend run build"
+  }
+}
