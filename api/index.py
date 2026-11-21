@@ -98,6 +98,16 @@ def handler(path):
         except Exception as e:
             return jsonify({"error": str(e)}), 400
 
+    # History endpoints
+    if clean_path in ["history", "api/history"]:
+        return jsonify({
+            "status": "success",
+            "count": 0,
+            "history": [],
+            "source": "serverless",
+            "message": "Serverless history endpoint online."
+        })
+
     return jsonify({"error": f"Endpoint '{clean_path}' not found."}), 404
 
 if __name__ == "__main__":
