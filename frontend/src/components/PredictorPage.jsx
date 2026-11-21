@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { 
   Plane, Calendar, Clock, ArrowRight, ArrowLeftRight, Sparkles, 
-  RefreshCw, History, ChevronLeft, 
-  Trash2, Download, AlertTriangle, Info, Database
+  RefreshCw, ChevronLeft, 
+  AlertTriangle, Info
 } from 'lucide-react';
 import { 
   AIRLINES, CITIES, TIME_SLOTS, ARRIVAL_TIME_SLOTS, 
   STOPS_OPTIONS, CLASS_OPTIONS, ROUTE_DURATIONS 
 } from '../data/flightConstants';
-import { 
-  predictFlightPrice, fetchPredictionHistory, 
-  clearAllPredictionHistory 
-} from '../utils/predictionService';
+import { predictFlightPrice } from '../utils/predictionService';
 
 const TODAY_STRING = new Date().toISOString().split('T')[0];
 
@@ -53,49 +50,7 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [predictionResult, setPredictionResult] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
-  const [historyError, setHistoryError] = useState(null);
-  const [isDbConnected, setIsDbConnected] = useState(false);
   const [error, setError] = useState(null);
-
-  // Fetch prediction history from Flask MySQL backend
-  const loadHistory = useCallback(async () => {
-    setIsHistoryLoading(true);
-    setHistoryError(null);
-    try {
-      const res = await fetchPredictionHistory();
-      setHistory(res.history || []);
-      setIsDbConnected(Boolean(res.fromDb));
-    } catch (err) {
-      console.error('Failed to load history:', err);
-      setHistoryError('Could not load prediction history from database.');
-    } finally {
-      setIsHistoryLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    fetchPredictionHistory()
-      .then((res) => {
-        if (active) {
-          setHistory(res.history || []);
-          setIsDbConnected(Boolean(res.fromDb));
-          setIsHistoryLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (active) {
-          console.error('Failed to load history:', err);
-          setHistoryError('Could not load prediction history from database.');
-          setIsHistoryLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Sync date and days_left
   const handleDateChange = (e) => {
@@ -181,9 +136,6 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
 
       setPredictionResult(enrichedResult);
 
-      // Refresh history from MySQL backend immediately
-      await loadHistory();
-
     } catch (err) {
       setError('Failed to calculate price prediction: ' + err.message);
     } finally {
@@ -207,26 +159,6 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
     });
     setPredictionResult(null);
     setError(null);
-  };
-
-  // Clear history from database and local state
-  const handleClearHistory = async () => {
-    if (window.confirm('Are you sure you want to clear your prediction history?')) {
-      setIsHistoryLoading(true);
-      await clearAllPredictionHistory();
-      await loadHistory();
-    }
-  };
-
-  // Export history to JSON
-  const handleExportHistory = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `flight_predictions_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
   };
 
   // Selected airline helper
@@ -658,158 +590,20 @@ export default function PredictorPage({ onBackToHome, initialRoute }) {
 
         </div>
 
-        {/* ================= PREDICTION HISTORY SECTION (PRD SECTION 5 & 7) ================= */}
-        <div className="mt-12 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <History className="w-5 h-5 text-indigo-400" />
-                  <span>Prediction History</span>
-                </h2>
-                {isDbConnected ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    MySQL Database
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
-                    <Database className="w-3 h-3 text-slate-400" />
-                    Local Storage
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Saved records from your previous price queries (retrieved from MySQL table).
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={loadHistory}
-                disabled={isHistoryLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
-                title="Refresh history from MySQL database"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isHistoryLoading ? 'animate-spin text-blue-400' : ''}`} />
-                <span>Refresh</span>
-              </button>
-
-              {history.length > 0 && (
-                <>
-                  <button
-                    onClick={handleExportHistory}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Export JSON</span>
-                  </button>
-                  <button
-                    onClick={handleClearHistory}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-900/20 hover:bg-rose-900/40 text-rose-300 text-xs font-medium border border-rose-500/20 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Clear History</span>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* History Error Notification */}
-          {historyError && (
-            <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>{historyError}</span>
-              </div>
-              <button onClick={loadHistory} className="underline hover:text-white font-medium cursor-pointer">
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {isHistoryLoading && history.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-xs flex flex-col items-center justify-center gap-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-blue-400" />
-              <span>Loading prediction history from MySQL...</span>
-            </div>
-          ) : history.length > 0 ? (
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-                    <th className="py-3 px-3">Route</th>
-                    <th className="py-3 px-3">Airline</th>
-                    <th className="py-3 px-3">Prediction Time</th>
-                    <th className="py-3 px-3">Days Left</th>
-                    <th className="py-3 px-3">Class & Stops</th>
-                    <th className="py-3 px-3 text-right">Predicted Fare</th>
-                    <th className="py-3 px-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {history.map((record) => (
-                    <tr key={record.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 px-3 font-semibold text-white">
-                        {record.source || record.source_city} ➔ {record.destination || record.destination_city}
-                      </td>
-                      <td className="py-3.5 px-3">{record.airline}</td>
-                      <td className="py-3.5 px-3 text-slate-300">
-                        {record.created_at ? (
-                          <div>
-                            <div className="text-white font-medium">{record.created_at.split(' ')[0]}</div>
-                            <div className="text-[10px] text-slate-500">{record.created_at.split(' ')[1] || ''}</div>
-                          </div>
-                        ) : (
-                          record.travelDate || 'N/A'
-                        )}
-                      </td>
-                      <td className="py-3.5 px-3">
-                        <span className="px-2 py-0.5 rounded bg-slate-800 text-blue-300 font-mono">
-                          {record.daysLeft ?? record.days_left ?? 15}d
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3 text-slate-400">
-                        {record.flightClass || record.travel_class} • {record.stops === 'zero' ? 'Non-stop' : record.stops}
-                      </td>
-                      <td className="py-3.5 px-3 text-right font-bold text-emerald-400 text-sm">
-                        ₹ {(record.price ?? record.predicted_price)?.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-3 text-right">
-                        <button
-                          onClick={() => {
-                            setFormData(prev => ({
-                              ...prev,
-                              airline: record.airline,
-                              source_city: record.source || record.source_city,
-                              destination_city: record.destination || record.destination_city,
-                              stops: record.stops,
-                              class: record.flightClass || record.travel_class || 'Economy',
-                              days_left: record.daysLeft ?? record.days_left ?? 15
-                            }));
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-medium text-[11px] transition-colors cursor-pointer"
-                        >
-                          Reload
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="py-12 text-center text-slate-500 text-xs">
-              <History className="w-8 h-8 mx-auto text-slate-600 mb-2 opacity-50" />
-              No flight predictions recorded yet in MySQL. Run a prediction above to build your history!
-            </div>
-          )}
-        </div>
-
       </div>
+
+      {/* FOOTER */}
+      <footer className="mt-20 py-12 border-t border-slate-900 bg-slate-950 text-slate-500 text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Plane className="w-5 h-5 text-blue-500 -rotate-45" />
+            <span className="font-bold text-slate-300">Flight Price Prediction System</span>
+          </div>
+          <div>
+            © 2026 Flight Price Prediction System. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
