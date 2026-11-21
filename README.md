@@ -96,6 +96,9 @@ Flight-Price-Prediction/
 │
 ├── frontend/
 │   ├── src/
+│   │   ├── components/
+│   │   ├── utils/
+│   │   └── data/
 │   ├── public/
 │   ├── package.json
 │   └── vite.config.js
@@ -106,7 +109,74 @@ Flight-Price-Prediction/
 │   │   ├── train_model.py
 │   │   └── model.pkl
 │   ├── app.py
-│   ├── database/
+│   ├── db.py
+│   ├── .env.example
 │   └── requirements.txt
 │
+├── api/
+│   ├── index.py
+│   ├── model_weights.npz
+│   └── model_meta.json
+│
+├── .env.example
 └── README.md
+```
+
+## 🗄️ MySQL Database Setup
+
+1. Open **MySQL Workbench** or your MySQL command line.
+2. Execute the following SQL query to create the database and table:
+
+```sql
+CREATE DATABASE IF NOT EXISTS flight_prediction;
+USE flight_prediction;
+
+CREATE TABLE IF NOT EXISTS prediction_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    airline VARCHAR(100) NOT NULL,
+    source_city VARCHAR(100) NOT NULL,
+    destination_city VARCHAR(100) NOT NULL,
+    departure_time VARCHAR(50) NOT NULL,
+    arrival_time VARCHAR(50) NOT NULL,
+    stops VARCHAR(50) NOT NULL,
+    travel_class VARCHAR(50) NOT NULL,
+    duration FLOAT NOT NULL,
+    days_left INT NOT NULL,
+    predicted_price FLOAT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+3. Configure your database credentials in `backend/.env`:
+
+```env
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=flight_prediction
+```
+
+## 🚀 Running Locally
+
+### 1. Backend (Flask)
+```bash
+cd backend
+python -m venv venv
+# Windows:
+.\venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+pip install -r requirements.txt
+python app.py
+```
+Backend runs on `http://localhost:5000`.
+
+### 2. Frontend (React)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend runs on `http://localhost:5173`.
